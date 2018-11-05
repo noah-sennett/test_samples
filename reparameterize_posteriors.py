@@ -1,7 +1,6 @@
 """Convert a posterior distribution of dchi in the parameterization used with SEOBNRT to a posterior distribution of dchi in the parameterization used with PhenomPNRT"""
 
 import numpy as np
-import lal
 import argparse
 import re
 from scipy import random
@@ -183,7 +182,7 @@ dchiMinDict = {'dchi0':dchi0min, 'dchi1':dchi1min, 'dchi2':dchi2min, 'dchi3':dch
 dchiMaxDict = {'dchi0':dchi0max, 'dchi1':dchi1max, 'dchi2':dchi2max, 'dchi3':dchi3max, 'dchi4':dchi4max, 'dchi5l':dchi5lmax, 'dchi6':dchi6max, 'dchi6l':dchi6lmax, 'dchi7':dchi7max, 'dchiminus2':dchiminus2max, 'dipolecoeff':dchiminus2max}
 
 def convert_SEOBNRT_to_PhenomPNRT_parameterization(data, param, bins_arg=25, nsamples=1000000):
-  """Given a full set of posterior samples from a generic FD run, return the bins and PDF for dchi for an equivalent TIGER run"""
+  """Given a full set of posterior samples from a SEOBNRT run, return the PDF for dchi for an equivalent PhenomPNRT run"""
 
   if param in ['dchi0', 'dchi1', 'dchi2', 'dchi6l', 'dchiminus2']:
     return data[param]
@@ -199,11 +198,11 @@ def convert_SEOBNRT_to_PhenomPNRT_parameterization(data, param, bins_arg=25, nsa
   a1zprior=spinmax * np.real(-2.*x1prior/lambertw(-2.*np.abs(x1prior)/np.e,-1))
   a2zprior=spinmax * np.real(-2.*x2prior/lambertw(-2.*np.abs(x2prior)/np.e,-1))
 
-  dchiprior_gFD = random.uniform(dchiMinDict[param],dchiMaxDict[param],nsamples)
+  dchiprior_SEOBNRT = random.uniform(dchiMinDict[param],dchiMaxDict[param],nsamples)
   
-  #Compute the prior distribution on dchi_i (parameterized as with TIGER) corresponding to a uniform distribution in dchi_i (parameterized as with generic FD)
-  dchiprior_TIGER = []
-  for i in range(len(dchiprior_gFD)):
+  #Compute the prior distribution on dchi_i (parameterized as with PhenomPNRT) corresponding to a uniform distribution in dchi_i (parameterized as with SEOBNRT)
+  dchiprior_PhenomPNRT = []
+  for i in range(len(dchiprior_SEOBNRT)):
     m1 = m1prior[i]
     m2 = m2prior[i]
     a1z = a1zprior[i]
@@ -211,10 +210,10 @@ def convert_SEOBNRT_to_PhenomPNRT_parameterization(data, param, bins_arg=25, nsa
     a1sq = a1zprior[i]*a1zprior[i]
     a2sq = a2zprior[i]*a2zprior[i]
     a1dota2 = a1zprior[i]*a2zprior[i]
-    dchiprior_TIGER.append(dchiprior_gFD[i]*(1. + phiSDict[param](m1,m2,a1z,a2z,a1sq,a2sq,a1dota2)/phiNSDict[param](m1,m2)))
+    dchiprior_PhenomPNRT.append(dchiprior_SEOBNRT[i]*(1. + phiSDict[param](m1,m2,a1z,a2z,a1sq,a2sq,a1dota2)/phiNSDict[param](m1,m2)))
   
-  #Convert the posetrior distribution of dchi_i (as parameterized with generic FD) into a distribution pf dchi_i (parameterized with TIGER)
-  dchidata_TIGER = []
+  #Convert the posetrior distribution of dchi_i (as parameterized with SEOBNRT) into a distribution pf dchi_i (parameterized with PhenomPNRT)
+  dchidata_PhenomPNRT = []
   for j in range(data.size):
     m1 = data['m1'][j]
     m2 = data['m2'][j]
@@ -223,16 +222,16 @@ def convert_SEOBNRT_to_PhenomPNRT_parameterization(data, param, bins_arg=25, nsa
     a1sq = data['a1'][j] * data['a1'][j]
     a2sq = data['a2'][j] * data['a2'][j]
     a1dota2 = data['a1'][j] * data['a2'][j] * data['costilt1'][j] * data['costilt2'][j]
-    dchidata_TIGER.append(data[param][j]*(1. + phiSDict[param](m1,m2,a1z,a2z,a1sq,a2sq,a1dota2)/phiNSDict[param](m1,m2)))
+    dchidata_PhenomPNRT.append(data[param][j]*(1. + phiSDict[param](m1,m2,a1z,a2z,a1sq,a2sq,a1dota2)/phiNSDict[param](m1,m2)))
   
-  dchi_min=min(dchidata_TIGER)
-  dchi_max=max(dchidata_TIGER)
+  dchi_min=min(dchidata_PhenomPNRT)
+  dchi_max=max(dchidata_PhenomPNRT)
   
-  P_dchi_pr, dchi_bins = np.histogram(dchiprior_TIGER, bins=np.linspace(dchi_min,dchi_max,num=bins_arg+1), normed=True)
-  P_dchi, dchi_bins = np.histogram(dchidata_TIGER, bins=dchi_bins, normed=True)
-  P_dchi_gFD, dchi_bins = np.histogram(data[param], bins=dchi_bins, normed=True)
+  P_dchi_pr, dchi_bins = np.histogram(dchiprior_PhenomPNRT, bins=np.linspace(dchi_min,dchi_max,num=bins_arg+1), normed=True)
+  P_dchi, dchi_bins = np.histogram(dchidata_PhenomPNRT, bins=dchi_bins, normed=True)
+  P_dchi_SEOBNRT, dchi_bins = np.histogram(data[param], bins=dchi_bins, normed=True)
   
-  #Compute the posterior distribution on dchi_i (as parameterized with TIGER) corresponding to a flat prior in dchi_i (as parameterized with TIGER) by reweighting by the prior on dchi_i (as parameterized with TIGER) given a flat prior on dchi_i (as parameterized by generic FD)
+  #Compute the posterior distribution on dchi_i (as parameterized with PhenomPNRT) corresponding to a flat prior in dchi_i (as parameterized with PhenomPNRT) by reweighting by the prior on dchi_i (as parameterized with PhenomPNRT) given a flat prior on dchi_i (as parameterized by SEOBNRT)
   bin_width=(dchi_bins[1]-dchi_bins[0])
   P_dchi_corrected = P_dchi/P_dchi_pr
   P_dchi_corrected[np.isnan(P_dchi_corrected)] = 0.
