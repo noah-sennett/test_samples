@@ -15,6 +15,9 @@ compmax = 7.73105475907
 spinmin = -0.99
 spinmax = 0.99
 
+#Euler-Mascheroni Constant
+euler_gamma = 0.57721566
+
 #The functions phi${N} return the coefficient of the N/2-PN term in the inspiral (as in Eq. A4 of https://arxiv.org/abs/1005.3306)
 
 def phi0(m1, m2, a1L, a2L, a1sq, a2sq, a1dota2):
@@ -67,7 +70,7 @@ def phi6(m1, m2, a1L, a2L, a1sq, a2sq, a1dota2):
   SL = m1M * m1M * a1L + m2M * m2M * a2L
   dSigmaL = d * (m2M * a2L - m1M * a1L)
   pnss3 = (326.75/1.12 + 557.5/1.8*eta) * eta * a1L * a2L + ((4703.5/8.4 + 2935./6. * m1M - 120. * m1M * m1M)*(qm_def1) + (-4108.25/6.72 - 108.5/1.2*m1M + 125.5/3.6*m1M*m1M))*m1M*m1M* a1sq + ((4703.5/8.4 + 2935./6. * m2M - 120. * m2M * m2M)*(qm_def2) + (-4108.25/6.72 - 108.5/1.2*m2M + 125.5/3.6*m2M*m2M))*m2M*m2M* a2sq
-  return (11583.231236531/4.694215680 - 640./3. * np.pi * np.pi - 6848./21.*lal.GAMMA) + eta*(-15737.765635/3.048192 + 2255./12.*np.pi*np.pi) + eta*eta*76055./1728. - eta*eta*eta*127825./1296. + (-6848./21.)*np.log(4.) + np.pi*(3760.*SL + 1490*dSigmaL)/3. + pnss3
+  return (11583.231236531/4.694215680 - 640./3. * np.pi * np.pi - 6848./21.*euler_gamma) + eta*(-15737.765635/3.048192 + 2255./12.*np.pi*np.pi) + eta*eta*76055./1728. - eta*eta*eta*127825./1296. + (-6848./21.)*np.log(4.) + np.pi*(3760.*SL + 1490*dSigmaL)/3. + pnss3
 
 def phi6l(m1, m2, a1L, a2L, a1sq, a2sq, a1dota2):
   return -6848./21.
